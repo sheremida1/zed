@@ -2,18 +2,40 @@ name: Build Windows Executable
 
 on:
   push:
-  workflow_dispatch:  # Это разрешает ручной запуск
+  workflow_dispatch:  # Позволяет запускать воркфлоу вручную
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-2022  # Используем Windows-сервер для сборки
+
     steps:
+      # Шаг 1: Клонируем репозиторий
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Шаг 2: Устанавливаем Rust (если он не предустановлен)
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: x86_64-pc-windows-msvc  # Цель для Windows
+
+      # Шаг 3: Кэшируем зависимости Rust для ускорения сборки
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # Шаг 4: Собираем проект в режиме релиза
       - name: Build release
-        run: cargo build --release
+        run: cargo build --release --target x86_64-pc-windows-msvc
+
+      # Шаг 5: Проверяем, что файл zed.exe создан
+      - name: Check if zed.exe exists
+        run: dir target\release\zed.exe
+
+      # Шаг 6: Загружаем zed.exe как артефакт
       - name: Upload executable
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Используем v4, так как v3 может вызывать проблемы
         with:
           name: zed-exe
           path: target/release/zed.exe
+          if-no-files-found: error  # Если файл не найден, воркфлоу завершится с ошибкой
