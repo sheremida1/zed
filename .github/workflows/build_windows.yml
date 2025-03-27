@@ -13,29 +13,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Шаг 2: Устанавливаем Rust (если он не предустановлен)
+      # Шаг 2: Устанавливаем Rust
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: x86_64-pc-windows-msvc  # Цель для Windows
 
-      # Шаг 3: Кэшируем зависимости Rust для ускорения сборки
+      # Шаг 3: Устанавливаем CMake
+      - name: Install CMake
+        run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        shell: cmd  # Используем cmd, так как это Windows
+
+      # Шаг 4: Кэшируем зависимости Rust
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
 
-      # Шаг 4: Собираем проект в режиме релиза
+      # Шаг 5: Проверяем, что мы в правильной директории
+      - name: List directory contents
+        run: dir
+        shell: cmd
+
+      # Шаг 6: Проверяем наличие Cargo.toml
+      - name: Check for Cargo.toml
+        run: dir Cargo.toml
+        shell: cmd
+
+      # Шаг 7: Собираем проект в режиме релиза
       - name: Build release
         run: cargo build --release --target x86_64-pc-windows-msvc
 
-      # Шаг 5: Проверяем, что файл zed.exe создан
+      # Шаг 8: Проверяем, что файл zed.exe создан
       - name: Check if zed.exe exists
         run: dir target\release\zed.exe
+        shell: cmd
 
-      # Шаг 6: Загружаем zed.exe как артефакт
+      # Шаг 9: Загружаем zed.exe как артефакт
       - name: Upload executable
-        uses: actions/upload-artifact@v4  # Используем v4, так как v3 может вызывать проблемы
+        uses: actions/upload-artifact@v4
         with:
           name: zed-exe
           path: target/release/zed.exe
-          if-no-files-found: error  # Если файл не найден, воркфлоу завершится с ошибкой
+          if-no-files-found: error
