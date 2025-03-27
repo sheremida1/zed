@@ -1,0 +1,17 @@
+name: Build Windows Executable
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build release
+        run: cargo build --release
+      - name: Upload executable
+        uses: actions/upload-artifact@v3
+        with:
+          name: zed-exe
+          path: target/release/zed.exe
